@@ -12,6 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import softserve.academy.myapplication.ui.ItemListScreen
+import softserve.academy.myapplication.ui.UserForm
 import softserve.academy.myapplication.ui.theme.MyApplicationTheme
 
 class MainActivity : ComponentActivity() {
@@ -21,7 +22,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             MyApplicationTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    ItemListScreen(modifier = Modifier.padding(innerPadding))
+                    UserForm(modifier = Modifier.padding(innerPadding))
                 }
             }
         }
