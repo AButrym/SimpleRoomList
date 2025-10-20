@@ -1,35 +1,32 @@
 package softserve.academy.myapplication.ui
 
+import android.content.res.Configuration
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import softserve.academy.myapplication.UserField
+import softserve.academy.myapplication.UserState
 import softserve.academy.myapplication.UserViewModel
-import softserve.academy.myapplication.room.HomeAddress
-import softserve.academy.myapplication.room.User
 
 @Composable
 fun UserForm(
     modifier: Modifier = Modifier,
-    userViewModel: UserViewModel = viewModel(),
+    userViewModel: UserViewModel = viewModel()
 ) {
-    var firstName by remember { mutableStateOf("") }
-    var lastName by remember { mutableStateOf("") }
-    var emailAddress by remember { mutableStateOf("") }
-    var phoneNumber by remember { mutableStateOf("") }
-    var country by remember { mutableStateOf("") }
-    var city by remember { mutableStateOf("") }
-    var street by remember { mutableStateOf("") }
-    var building by remember { mutableStateOf("") }
-    var apartment by remember { mutableStateOf("") }
-    var zipCode by remember { mutableStateOf("") }
+    val uiState by userViewModel.uiState.collectAsState()
+    val configuration = LocalConfiguration.current
+    val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 
     Column(
         modifier = Modifier
@@ -38,118 +35,96 @@ fun UserForm(
             .verticalScroll(rememberScrollState())
             .then(modifier)
     ) {
-        Text("User Information", style = MaterialTheme.typography.headlineSmall)
-        Spacer(modifier = Modifier.height(16.dp))
+        if (isLandscape) {
+            Row(modifier = Modifier.fillMaxWidth()) {
+                Column(modifier = Modifier.weight(1f)) {
+                    UserInfoFields(uiState, userViewModel)
+                }
+                Spacer(modifier = Modifier.width(16.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    HomeAddressFields(uiState, userViewModel)
+                }
+            }
+        } else {
+            UserInfoFields(uiState, userViewModel)
+            Spacer(modifier = Modifier.height(16.dp))
+            HomeAddressFields(uiState, userViewModel)
+        }
 
-        OutlinedTextField(
-            value = firstName,
-            onValueChange = { firstName = it },
-            label = { Text("First Name") },
-            modifier = Modifier.fillMaxWidth()
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-
-        OutlinedTextField(
-            value = lastName,
-            onValueChange = { lastName = it },
-            label = { Text("Last Name") },
-            modifier = Modifier.fillMaxWidth()
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-
-        OutlinedTextField(
-            value = emailAddress,
-            onValueChange = { emailAddress = it },
-            label = { Text("Email Address") },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-            modifier = Modifier.fillMaxWidth()
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-
-        OutlinedTextField(
-            value = phoneNumber,
-            onValueChange = { phoneNumber = it },
-            label = { Text("Phone Number") },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
-            modifier = Modifier.fillMaxWidth()
-        )
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Text("Home Address", style = MaterialTheme.typography.headlineSmall)
-        Spacer(modifier = Modifier.height(16.dp))
-
-        OutlinedTextField(
-            value = country,
-            onValueChange = { country = it },
-            label = { Text("Country") },
-            modifier = Modifier.fillMaxWidth()
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-
-        OutlinedTextField(
-            value = city,
-            onValueChange = { city = it },
-            label = { Text("City") },
-            modifier = Modifier.fillMaxWidth()
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-
-        OutlinedTextField(
-            value = street,
-            onValueChange = { street = it },
-            label = { Text("Street") },
-            modifier = Modifier.fillMaxWidth()
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-
-        OutlinedTextField(
-            value = building,
-            onValueChange = { building = it },
-            label = { Text("Building") },
-            modifier = Modifier.fillMaxWidth()
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-
-        OutlinedTextField(
-            value = apartment,
-            onValueChange = { apartment = it },
-            label = { Text("Apartment") },
-            modifier = Modifier.fillMaxWidth()
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-
-        OutlinedTextField(
-            value = zipCode,
-            onValueChange = { zipCode = it },
-            label = { Text("Zip Code") },
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-            modifier = Modifier.fillMaxWidth()
-        )
         Spacer(modifier = Modifier.height(24.dp))
 
         Button(
-            onClick = {
-
-                val homeAddress = HomeAddress(
-                    country = country,
-                    city = city,
-                    street = street,
-                    building = building,
-                    apartment = apartment,
-                    zipCode = zipCode
-                )
-                val user = User(
-                    firstName = firstName,
-                    lastName = lastName,
-                    emailAddress = emailAddress,
-                    phoneNumber = phoneNumber,
-                    homeAddress = homeAddress
-                )
-                userViewModel.insertUser(user)
-            },
+            onClick = { userViewModel.saveUser() },
             modifier = Modifier.fillMaxWidth()
         ) {
             Text("Save User")
         }
     }
+}
+
+@Composable
+fun UserInfoFields(uiState: UserState, userViewModel: UserViewModel) {
+    Text("User Information", style = MaterialTheme.typography.headlineSmall)
+    Spacer(modifier = Modifier.height(16.dp))
+
+    ValidatedOutlinedTextField(
+        value = uiState.firstName,
+        onValueChange = { userViewModel.onFieldChange(it, UserField.FIRST_NAME) },
+        label = "First Name",
+        errorMessage = uiState.firstNameError
+    )
+    ValidatedOutlinedTextField(
+        value = uiState.lastName,
+        onValueChange = { userViewModel.onFieldChange(it, UserField.LAST_NAME) },
+        label = "Last Name",
+        errorMessage = uiState.lastNameError
+    )
+    ValidatedOutlinedTextField(
+        value = uiState.phoneNumber,
+        onValueChange = { userViewModel.onFieldChange(it, UserField.PHONE_NUMBER) },
+        label = "PhoneNumber",
+        errorMessage = uiState.phoneNumberError
+    )
+    // TODO: add rest of the fields
+}
+
+@Composable
+fun HomeAddressFields(uiState: UserState, userViewModel: UserViewModel) {
+    Text("Home Address", style = MaterialTheme.typography.headlineSmall)
+    Spacer(modifier = Modifier.height(16.dp))
+    ValidatedOutlinedTextField(
+        value = uiState.phoneNumber,
+        onValueChange = { userViewModel.onFieldChange(it, UserField.CITY) },
+        label = "City",
+        errorMessage = null
+    )
+    // TODO: rest of the Address fields
+    // ... OutlinedTextFields for all address fields
+}
+
+@Composable
+fun ValidatedOutlinedTextField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    label: String,
+    errorMessage: String?,
+    keyboardOptions: KeyboardOptions = KeyboardOptions.Default
+) {
+    OutlinedTextField(
+        value = value,
+        onValueChange = onValueChange,
+        label = { Text(label) },
+        isError = errorMessage != null,
+        modifier = Modifier.fillMaxWidth(),
+        keyboardOptions = keyboardOptions
+    )
+    errorMessage?.let {
+        Text(
+            text = it,
+            color = MaterialTheme.colorScheme.error,
+            style = MaterialTheme.typography.bodySmall,
+            modifier = Modifier.padding(start = 16.dp)
+        )
+    }
+    Spacer(modifier = Modifier.height(8.dp))
 }
