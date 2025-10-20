@@ -25,37 +25,74 @@ import softserve.academy.myapplication.ItemViewModel
 
 @Composable
 fun ItemListScreen(
-    viewModel: ItemViewModel = viewModel(),
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    viewModel: ItemViewModel = viewModel()
 ) {
-    val items by viewModel.items.collectAsState()
-    var text by remember { mutableStateOf("") }
+//    val items by viewModel.items.collectAsState()
+//    var text by remember { mutableStateOf("") }
 
-    Column(Modifier.padding(16.dp).then(modifier)) {
+    var showColdFlow by remember { mutableStateOf(false) }
+    var showHotFlow by remember { mutableStateOf(false) }
+
+    Column(Modifier
+        .padding(16.dp)
+        .then(modifier)) {
+//        Row {
+//            OutlinedTextField(
+//                value = text,
+//                onValueChange = { text = it },
+//                label = { Text("New item") },
+//                modifier = Modifier.weight(1f)
+//            )
+//            Spacer(Modifier.width(8.dp))
+//            Button(onClick = {
+//                if (text.isNotBlank()) {
+//                    viewModel.addItem(text)
+//                    text = ""
+//                }
+//            }) {
+//                Text("Add")
+//            }
+//        }
+//
+//        Spacer(Modifier.height(16.dp))
+//
+//        LazyColumn {
+//            items(items) { item ->
+//                Text("- ${item.name}", style = MaterialTheme.typography.bodyLarge)
+//            }
+//        }
+
         Row {
-            OutlinedTextField(
-                value = text,
-                onValueChange = { text = it },
-                label = { Text("New item") },
-                modifier = Modifier.weight(1f)
-            )
-            Spacer(Modifier.width(8.dp))
-            Button(onClick = {
-                if (text.isNotBlank()) {
-                    viewModel.addItem(text)
-                    text = ""
-                }
-            }) {
-                Text("Add")
+            Button(onClick = { viewModel.addItem("Item #${(0..999).random()}") }) {
+                Text("Add Random Item")
+            }
+            Spacer(modifier = Modifier.width(16.dp))
+            Button(onClick = { viewModel.clearAll() }) {
+                Text("Clear All")
             }
         }
 
         Spacer(Modifier.height(16.dp))
 
-        LazyColumn {
-            items(items) { item ->
-                Text("• ${item.name}", style = MaterialTheme.typography.bodyLarge)
+        Row {
+            Button(onClick = { showColdFlow = !showColdFlow }) {
+                Text(if (showColdFlow) "Stop Cold Flow" else "Start Cold Flow")
             }
+            Spacer(modifier = Modifier.width(16.dp))
+            Button(onClick = { showHotFlow = !showHotFlow }) {
+                Text(if (showHotFlow) "Stop Hot Flow" else "Start Hot Flow")
+            }
+        }
+
+        if (showColdFlow) {
+            val coldItems by viewModel.coldFlow.collectAsState(initial = emptyList())
+            Text("Cold flow count: ${coldItems.size}")
+        }
+
+        if (showHotFlow) {
+            val hotItems by viewModel.hotFlow.collectAsState()
+            Text("Hot flow count: ${hotItems.size}")
         }
     }
 }

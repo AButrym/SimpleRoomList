@@ -12,4 +12,7 @@ interface ItemDao {
 
     @Insert
     suspend fun insert(item: Item)
+
+    @Query("DELETE FROM items")
+    suspend fun deleteAll()
 }
